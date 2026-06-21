@@ -25,7 +25,24 @@ exports.register = async (req, res) => {
       password: hashedPassword
     });
 
-    res.status(201).json(user);
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false,
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(201).json({
+      success: true,
+    });
+
+
 
   } catch (error) {
     res.status(500).json({
@@ -69,8 +86,16 @@ exports.login = async (req, res) => {
       }
     );
 
-    res.json({
-      token
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: false, // true in production
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: "Login successful",
     });
 
   } catch (error) {
@@ -78,4 +103,11 @@ exports.login = async (req, res) => {
       message: error.message
     });
   }
+};
+
+exports.getMe = async (req, res) => {
+  const user = await User.findById(req.user)
+    .select("-password");
+
+  res.json(user);
 };

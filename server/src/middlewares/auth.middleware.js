@@ -1,18 +1,18 @@
 const jwt = require("jsonwebtoken");
 
 module.exports = (req, res, next) => {
-  const token = req.header("Authorization");
+  const token = req.cookies.token;
 
   if (!token) {
     return res.status(401).json({
-      message: "No token"
+      message: "Not authorised"
     });
   }
 
   try {
     const decoded = jwt.verify(
-      token.replace("Bearer ", ""),
-      process.env.JWT_SECRET
+      token,
+    process.env.JWT_SECRET
     );
 
     req.user = decoded.id;
